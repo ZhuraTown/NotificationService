@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "notificationservice"
+version = "0.1.0"
+description = ""
+authors = ["ZhuraTown <Swiglek@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.115.8"
+sqlalchemy = "^2.0.38"
+pika = "^1.3.2"
+websockets = "^14.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
