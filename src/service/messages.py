@@ -6,6 +6,7 @@ from common.exceptions import ToClientException
 from aio_pika import Message
 
 from common.priorities import QUEUE_MESSAGES_PRIORITY
+from db.repo.message import MessageRepository
 from db.repo.user import UserRepository
 from dto.messages import CreateMessage, MessageQueue
 from queues.producer import RabbitMQProducer
@@ -22,7 +23,6 @@ class MessageService:
             session: AsyncSession,
             message_data: CreateMessage,
             author: int,
-            # todo: add later
             producer: RabbitMQProducer,
             queue_name: str
     ):
@@ -36,6 +36,12 @@ class MessageService:
             priority=QUEUE_MESSAGES_PRIORITY[message_data.type]
         )
 
-
-async def create_message(message: Message):
-    ...
+    @classmethod
+    async def get_messages(
+            cls,
+            session: AsyncSession,
+            user_id: int,
+            limit: int,
+            offset: int
+    ) -> list[Message]:
+        return await MessageRepository.list_messages(session, user_id, limit, offset)

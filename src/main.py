@@ -7,10 +7,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 
 from common.exceptions import ToClientException
+from queues.producer import producer
 
 from api.user import router as user_router
 from api.message import router as message_router
-from queues.producer import producer
+from api.notifications import router as notification_router
 
 
 @asynccontextmanager
@@ -25,6 +26,7 @@ async def lifespan(app: FastAPI):
 ROUTES = [
     user_router,
     message_router,
+    notification_router,
 ]
 
 

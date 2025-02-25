@@ -1,4 +1,6 @@
+from sqlalchemy import select, or_, desc
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from db.orm import Message
 
@@ -22,3 +24,29 @@ class MessageRepository:
     ):
         session.add_all(messages)
         return messages
+
+    @classmethod
+    async def list_messages(
+            cls,
+            session: AsyncSession,
+            user_id: int,
+            limit: int,
+            offset: int,
+    ) -> list[Message]:
+        query = (
+            select(Message).where(
+                or_(
+                    Message.recipient_id == user_id,
+                    Message.recipient_id.is_(None)
+                )
+            )
+            .options(
+                joinedload(Message.author)
+            )
+            .order_by(desc(Message.created_at))
+            .limit(limit)
+            .offset(offset)
+        )
+        return (await session.scalars(query)).all()
+
+
