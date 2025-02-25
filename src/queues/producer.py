@@ -1,23 +1,34 @@
-import pika
+import json
+from aio_pika import Message, DeliveryMode
+from aio_pika.abc import AbstractExchange
 
-# Настройки подключения
-rabbitmq_host = "localhost"  # RabbitMQ работает на localhost в контейнере
-username = "rmuser"         # Установленный пользователь
-password = "rmpassword"     # Установленный пароль
+from src.config import settings
+from src.queues.base import RabbitMQBase
 
-# Устанавливаем соединение
-credentials = pika.PlainCredentials(username, password)
-connection = pika.BlockingConnection(pika.ConnectionParameters(host=rabbitmq_host, credentials=credentials))
-channel = connection.channel()
 
-# Объявляем очередь
-queue_name = "test_queue"
-channel.queue_declare(queue=queue_name)
+class RabbitMQProducer(RabbitMQBase):
+    exchange: AbstractExchange
 
-# Отправляем сообщение
-message = "Hello, RabbitMQ!"
-channel.basic_publish(exchange="", routing_key=queue_name, body=message)
-print(f"[x] Отправлено сообщение: {message}")
+    async def start(self):
+        await super().start()
 
-# Закрываем соединение
-connection.close()
+    async def send_json_message(self, queue_name: str, data: dict, priority: int | None = None):
+        body = json.dumps(data).encode()
+        message = Message(
+            body=body,
+            content_type="application/json",
+            delivery_mode=DeliveryMode.PERSISTENT,
+            priority=priority
+        )
+        await self.channel.default_exchange.publish(
+            message,
+            routing_key=queue_name,
+        )
+
+
+producer = RabbitMQProducer(
+        user=settings.rabbitmq.user,
+        password=settings.rabbitmq.password,
+        host=settings.rabbitmq.host,
+        port=settings.rabbitmq.port,
+    )
