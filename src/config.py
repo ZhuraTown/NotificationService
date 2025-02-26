@@ -28,6 +28,19 @@ class DBSettings(ConfigSettings):
         ).render_as_string(hide_password=False)
 
 
+class RedisSettings(ConfigSettings):
+    redis_host: str = "localhost"
+    redis_user: str = ""
+    redis_password: str = ""
+    redis_port: int = 6379
+
+    @property
+    def redis_dsn(self) -> str:
+        if self.redis_user and self.redis_password:
+            return f"redis://{self.redis_user}:{self.redis_password}@{self.redis_host}:{self.redis_port}/1"
+        return f"redis://{self.redis_host}:{self.redis_port}/1"
+
+
 class RabbitMQSettings(ConfigSettings):
     model_config = SettingsConfigDict(env_prefix='RM_')
     user: str = "user"
@@ -49,8 +62,11 @@ class Settings(
 ):
     rabbitmq: RabbitMQSettings = RabbitMQSettings()
     db: DBSettings = DBSettings()
+    redis: RedisSettings = RedisSettings()
     auth: AuthSettings = AuthSettings()
     queue: QueueSettings = QueueSettings()
 
 
 settings = Settings()
+
+NOTIFICATIONS_CHANNEL_NAME = "notifications_channel"

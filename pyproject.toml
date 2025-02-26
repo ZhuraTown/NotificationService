@@ -21,6 +21,8 @@ uvicorn = "^0.34.0"
 passlib = "^1.7.4"
 python-jose = "^3.4.0"
 bcrypt = "^4.2.1"
+setuptools = "^75.8.1"
+redis = "^5.2.1"
 
 
 [build-system]

@@ -1,7 +1,8 @@
 import asyncio
 import logging
 
-from config import settings
+from config import settings, NOTIFICATIONS_CHANNEL_NAME
+from pub_sub.pub import publisher
 from queues.consumer import RabbitMQConsumer
 from queues.handlers import PriorityMessageHandler
 
@@ -19,7 +20,7 @@ async def main():
     logger.info("Starting consumer")
     await consumer.consume(
         settings.queue.priority_queue_name,
-        PriorityMessageHandler(),
+        PriorityMessageHandler(publisher=publisher, channel_name=NOTIFICATIONS_CHANNEL_NAME),
         arguments={"x-max-priority": 10}
     )
     try:

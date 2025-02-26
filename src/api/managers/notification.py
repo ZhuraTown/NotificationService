@@ -8,7 +8,7 @@ from starlette.websockets import WebSocket
 
 from common.enums import NotificationEventType
 from db.orm import User
-from dto.notifications import NotificationRead, NotificationEventSchema
+from dto.notifications import NotificationRead, NotificationEventSchema, NotificationReadSubscriber
 from service.messages import MessageService
 
 logger = logging.getLogger(__name__)
@@ -58,11 +58,23 @@ class NotificationManager:
         else:
             await self.action_by_event(event, user, websocket, session)
 
-    # async def broadcast_message(self, message: dict):
-    #     for user_id, connection_data in self.active_connections.items():
-    #         connection_data: [WebSocket, User]
-    #         websocket, user = connection_data
-    #         await self._send_message(message, status=1000, websocket=websocket)
+    async def broadcast_message(self, message: NotificationReadSubscriber):
+        if message.recipient_id:
+            if connections := self.active_connections.get(message.recipient_id):
+                for connection in connections:
+                    await self._send_message(
+                        NotificationRead.parse_obj(message).model_dump(mode='json'), status=1000, websocket=connection
+                    )
+                return
+            return
+
+        # send all
+        for user_id, connections in self.active_connections.items():
+            for connection in connections:
+                connection: WebSocket
+                await self._send_message(
+                    NotificationRead.parse_obj(message).model_dump(mode='json'), status=1000, websocket=connection
+                )
 
     async def disconnect(self, current_user: User, websocket: WebSocket):
         self.active_connections[current_user.id].discard(websocket)
@@ -103,4 +115,7 @@ class NotificationManager:
                 status=status.WS_1007_INVALID_FRAME_PAYLOAD_DATA,
                 websocket=websocket
             )
+
+
+manager_notifications = NotificationManager()
 

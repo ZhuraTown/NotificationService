@@ -5,3 +5,4 @@ class BaseDTO(BaseModel):
 
     class Config:
         from_attributes = True
+        extra = "allow"

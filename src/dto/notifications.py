@@ -14,6 +14,10 @@ class NotificationRead(BaseDTO):
     created_at: datetime
 
 
+class NotificationReadSubscriber(NotificationRead):
+    recipient_id: int | None = None
+
+
 class NotificationPaginator(BaseDTO):
     limit: int
     offset: int

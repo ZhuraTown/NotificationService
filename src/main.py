@@ -1,23 +1,35 @@
-from contextlib import asynccontextmanager
+import asyncio
 
 import uvicorn
 from http import HTTPStatus
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
+from contextlib import asynccontextmanager
 
+from api.managers.notification import manager_notifications
 from common.exceptions import ToClientException
+from config import NOTIFICATIONS_CHANNEL_NAME
+from pub_sub.sub import subscriber
 from queues.producer import producer
 
 from api.user import router as user_router
 from api.message import router as message_router
 from api.notifications import router as notification_router
+from service.notifications import broadcast_new_notifications
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("Startup server")
     await producer.start()
+    asyncio.create_task(
+        broadcast_new_notifications(
+            channel_name=NOTIFICATIONS_CHANNEL_NAME,
+            sub=subscriber,
+            ws_manager=manager_notifications,
+        )
+    )
     yield
     print("Shutdown server")
     await producer.close()

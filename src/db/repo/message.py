@@ -17,6 +17,18 @@ class MessageRepository:
         return message
 
     @classmethod
+    async def get_message(
+            cls,
+            session: AsyncSession,
+            msg_id: int
+    ) -> Message | None:
+        return await session.scalar(
+            select(Message)
+            .where(Message.id == msg_id)
+            .options(joinedload(Message.author))
+        )
+
+    @classmethod
     async def create_for_all(
             cls,
             session: AsyncSession,
